@@ -53,13 +53,15 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    void setInputGain(float val);
-    void setOutputLevel(float val);
-
+    juce::AudioProcessorValueTreeState apvts; // comunication between editor and processor
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
+    
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DistortionPluginAudioProcessor)
+
     
-    float inputGain;
-    float outputLevel;
+    juce::dsp::ProcessorDuplicator <juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients <float>> lowPassFilter;
+    std::unique_ptr<juce::dsp::Oversampling<float>> oversampling;
+    float lastSampleRate;
 };

@@ -14,7 +14,7 @@
 //==============================================================================
 /**
 */
-class DistortionPluginAudioProcessorEditor  : public juce::AudioProcessorEditor, private juce::Slider::Listener
+class DistortionPluginAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
     DistortionPluginAudioProcessorEditor (DistortionPluginAudioProcessor&);
@@ -29,17 +29,20 @@ private:
     // access the processor object that created it.
     DistortionPluginAudioProcessor& audioProcessor;
 
-    juce::Slider inputGain;
+    juce::Slider inputGainSlider;
     juce::Label inputGainLabel;
     
-    juce::Slider outputLevel;
+    juce::Slider outputLevelSlider;
     juce::Label outputLevelLabel;
     
     juce::Slider toneSlider;
     juce::Label toneLabel;
     
     
-    void sliderValueChanged(juce::Slider* slider) override; 
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> inputGainSliderAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> outputLevelSliderAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> toneSliderAttachment;
+    
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DistortionPluginAudioProcessorEditor)
 };
