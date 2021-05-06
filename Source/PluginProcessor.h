@@ -52,6 +52,7 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    void setTypeSelected(int type);
     
     juce::AudioProcessorValueTreeState apvts; // comunication between editor and processor
     juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
@@ -64,4 +65,5 @@ private:
     juce::dsp::ProcessorDuplicator <juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients <float>> lowPassFilter;
     std::unique_ptr<juce::dsp::Oversampling<float>> oversampling;
     float lastSampleRate;
+    int distortionType;
 };

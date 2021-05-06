@@ -98,6 +98,9 @@ void DistortionPluginAudioProcessor::prepareToPlay (double sampleRate, int sampl
     // initialisation that you need..
     lastSampleRate = sampleRate;
     
+    //oversampling->reset();
+    
+    
     juce::dsp::ProcessSpec spec;
     spec.maximumBlockSize = samplesPerBlock;
     spec.sampleRate = sampleRate;
@@ -155,6 +158,9 @@ void DistortionPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
         buffer.clear (i, 0, buffer.getNumSamples());
         
         juce::dsp::AudioBlock <float> blockInput (buffer);
+        juce::dsp::AudioBlock<float> oversampledInput;
+        //oversampledInput = oversampling->processSamplesUp(blockInput);
+        
         //juce::dsp::AudioBlock <float> blockOutput (buffer); add oversampling
 
     // This is the place where you'd normally do the guts of your plugin's
@@ -178,10 +184,24 @@ void DistortionPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
 
         // ..do something to the data...
         for(int i =0; i<numSamples; ++i){
-            const float in = blockInput.getSample(channel, i) * inputGain;            float out;
-            float threshold = 1.0f;            if(in > threshold)                out = threshold;            else if(in < -threshold)                out = -threshold;            else                out = in;
-            
-            blockInput.setSample(channel,i,out);
+            const float in = blockInput.getSample(channel, i) * gainDB;            float out;
+            if(distortionType == 1)
+            {
+                float threshold = 1.0f;                if(in > threshold)                    out = threshold;                else if(in < -threshold)                    out = -threshold;                else                    out = in;
+            }else if(distortionType == 2){
+                float threshold1 = 1.0f/3.0f;                float threshold2 = 2.0f/3.0f;                if(in > threshold2)                    out = 1.0f;                else if(in > threshold1)                    out = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;                else if(in < -threshold2)                    out = -1.0f;                else if(in < -threshold1)                    out = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;                else                    out = 2.0f* in;
+            }else if(distortionType == 3)
+            {
+                if(in > 0)                    out = 1.0f - expf(-in);                else                    out = -1.0f + expf(in);
+            }else if(distortionType == 4)
+            {
+                out = fabsf(in);
+            }
+            else if(distortionType == 5)
+            {
+                if(in > 0)                    out = in;                else                    out = 0;
+            }
+            channelData[i] = (volumeDB) * out;
         }
     }
     
@@ -225,7 +245,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout DistortionPluginAudioProcess
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> parameters;
      
-    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("GAIN", "Input Gain", 1, 100, 20));
+    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("GAIN", "Input Gain", 1, 40, 10));
     
     parameters.push_back (std::make_unique<juce::AudioParameterInt> ("VOLUME", "Output level", 1, 100, 20));
 
@@ -235,4 +255,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout DistortionPluginAudioProcess
     return { parameters.begin(), parameters.end() };
 }
 
+
+void DistortionPluginAudioProcessor::setTypeSelected(int type){
+    distortionType = type;
+}
 
