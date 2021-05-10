@@ -22,6 +22,7 @@ DistortionAudioProcessor::DistortionAudioProcessor()
                        )
 #endif
 {
+    oversampling.reset (new dsp::Oversampling<float> (2, 2, dsp::Oversampling<float>::filterHalfBandFIREquiripple, false));
 }
 
 DistortionAudioProcessor::~DistortionAudioProcessor()
@@ -95,7 +96,8 @@ void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    
+    oversampling->reset();
+    oversampling->initProcessing (static_cast<size_t> (samplesPerBlock));
     
 }
 
@@ -152,6 +154,15 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
+    int numSamples = buffer.getNumSamples();
+    
+    float* channelOutDataL = buffer.getWritePointer(0);
+    float* channelOutDataR = buffer.getWritePointer(1);
+    const float* channelInData = buffer.getReadPointer(0);
+    
+    dsp::AudioBlock<float> block(buffer);
+    
+    dsp::AudioBlock<float> blockOversampled = oversampling->processSamplesUp(block); 
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
@@ -160,18 +171,11 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
        
         // ..do something to the data...
         
-    }
-    int numSamples = buffer.getNumSamples();
-    
-    float* channelOutDataL = buffer.getWritePointer(0);
-    float* channelOutDataR = buffer.getWritePointer(1);
-    const float* channelInData = buffer.getReadPointer(0);
-    
-    for (int i = 0; i < numSamples; ++i) {
-        float in = channelInData[i];
+    for (int i = 0; i < (int)blockOversampled.getNumSamples(); ++i) {
+        float in = blockOversampled.getSample(channel, i);
         float threshold = 1.0f;
-        in *= 5;
-        if(in > threshold){
+        in *= 10;
+        /*if(in > threshold){
               channelOutDataL[i] = threshold;
               channelOutDataR[i] = threshold;
         }
@@ -182,8 +186,36 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         else{
               channelOutDataL[i] = in;
               channelOutDataR[i] = in;
+        }*/
+        float threshold1 = 1.0f/3.0f;
+        float threshold2 = 2.0f/3.0f;
+        if(in > threshold2){
+              channelData[i] = 1.0f;
+              //channelOutDataR[i] = 1.0f;
         }
+        else if(in > threshold1){
+              channelData[i] = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;
+              //channelOutDataR[i] = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;
+        }
+        else if(in < -threshold2){
+              channelData[i] = -1.0f;
+              //channelOutDataR[i] = -1.0f;
+        }
+        else if(in < -threshold1){
+              channelData[i] = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;
+              //channelOutDataR[i] = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;
+        }
+        else{
+              channelData[i] = 2.0f* in;
+              //channelOutDataR[i] = 2.0f* in;
+        }
+        
+        oversampling->processSamplesDown(block); 
     }
+        
+    }
+    
+    
      
 }
 
