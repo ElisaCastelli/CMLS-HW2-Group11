@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-DistortionPluginAudioProcessor::DistortionPluginAudioProcessor()
+DistortionAudioProcessor::DistortionAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -19,23 +19,22 @@ DistortionPluginAudioProcessor::DistortionPluginAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ), apvts(*this, nullptr, "Parameters", createParameters()),
-                       lowPassFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1))
+                       )
 #endif
 {
 }
 
-DistortionPluginAudioProcessor::~DistortionPluginAudioProcessor()
+DistortionAudioProcessor::~DistortionAudioProcessor()
 {
 }
 
 //==============================================================================
-const juce::String DistortionPluginAudioProcessor::getName() const
+const juce::String DistortionAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool DistortionPluginAudioProcessor::acceptsMidi() const
+bool DistortionAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -44,7 +43,7 @@ bool DistortionPluginAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool DistortionPluginAudioProcessor::producesMidi() const
+bool DistortionAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -53,7 +52,7 @@ bool DistortionPluginAudioProcessor::producesMidi() const
    #endif
 }
 
-bool DistortionPluginAudioProcessor::isMidiEffect() const
+bool DistortionAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -62,62 +61,52 @@ bool DistortionPluginAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double DistortionPluginAudioProcessor::getTailLengthSeconds() const
+double DistortionAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int DistortionPluginAudioProcessor::getNumPrograms()
+int DistortionAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int DistortionPluginAudioProcessor::getCurrentProgram()
+int DistortionAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void DistortionPluginAudioProcessor::setCurrentProgram (int index)
+void DistortionAudioProcessor::setCurrentProgram (int index)
 {
 }
 
-const juce::String DistortionPluginAudioProcessor::getProgramName (int index)
+const juce::String DistortionAudioProcessor::getProgramName (int index)
 {
     return {};
 }
 
-void DistortionPluginAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void DistortionAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
 }
 
 //==============================================================================
-void DistortionPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    lastSampleRate = sampleRate;
-    
-    //oversampling->reset();
     
     
-    juce::dsp::ProcessSpec spec;
-    spec.maximumBlockSize = samplesPerBlock;
-    spec.sampleRate = sampleRate;
-    spec.numChannels = getTotalNumOutputChannels();
-
-    lowPassFilter.prepare(spec);
-    lowPassFilter.reset();
 }
 
-void DistortionPluginAudioProcessor::releaseResources()
+void DistortionAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool DistortionPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool DistortionAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
@@ -142,7 +131,7 @@ bool DistortionPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& 
 }
 #endif
 
-void DistortionPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
@@ -156,12 +145,6 @@ void DistortionPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-        
-        juce::dsp::AudioBlock <float> blockInput (buffer);
-        juce::dsp::AudioBlock<float> oversampledInput;
-        //oversampledInput = oversampling->processSamplesUp(blockInput);
-        
-        //juce::dsp::AudioBlock <float> blockOutput (buffer); add oversampling
 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
@@ -169,66 +152,61 @@ void DistortionPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    int tone = *apvts.getRawParameterValue("TONE");
-    int inputGain = *apvts.getRawParameterValue("GAIN");
-    int outputLevel = *apvts.getRawParameterValue("VOLUME");
-    
-    int gainDB = pow(10, inputGain / 20);
-    int volumeDB = pow(10, outputLevel / 20);
-    
-    int numSamples = buffer.getNumSamples();
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
-
+        
+       
         // ..do something to the data...
-        for(int i =0; i<numSamples; ++i){
-            const float in = blockInput.getSample(channel, i) * gainDB;            float out;
-            if(distortionType == 1)
-            {
-                float threshold = 1.0f;                if(in > threshold)                    out = threshold;                else if(in < -threshold)                    out = -threshold;                else                    out = in;
-            }else if(distortionType == 2){
-                float threshold1 = 1.0f/3.0f;                float threshold2 = 2.0f/3.0f;                if(in > threshold2)                    out = 1.0f;                else if(in > threshold1)                    out = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;                else if(in < -threshold2)                    out = -1.0f;                else if(in < -threshold1)                    out = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;                else                    out = 2.0f* in;
-            }else if(distortionType == 3)
-            {
-                if(in > 0)                    out = 1.0f - expf(-in);                else                    out = -1.0f + expf(in);
-            }else if(distortionType == 4)
-            {
-                out = fabsf(in);
-            }
-            else if(distortionType == 5)
-            {
-                if(in > 0)                    out = in;                else                    out = 0;
-            }
-            channelData[i] = (volumeDB) * out;
+        
+    }
+    int numSamples = buffer.getNumSamples();
+    
+    float* channelOutDataL = buffer.getWritePointer(0);
+    float* channelOutDataR = buffer.getWritePointer(1);
+    const float* channelInData = buffer.getReadPointer(0);
+    
+    for (int i = 0; i < numSamples; ++i) {
+        float in = channelInData[i];
+        float threshold = 1.0f;
+        in *= 5;
+        if(in > threshold){
+              channelOutDataL[i] = threshold;
+              channelOutDataR[i] = threshold;
+        }
+        else if(in < -threshold){
+              channelOutDataL[i] = -threshold;
+              channelOutDataR[i] = -threshold;
+        }
+        else{
+              channelOutDataL[i] = in;
+              channelOutDataR[i] = in;
         }
     }
-    
-    
-    
+     
 }
 
 //==============================================================================
-bool DistortionPluginAudioProcessor::hasEditor() const
+bool DistortionAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* DistortionPluginAudioProcessor::createEditor()
+juce::AudioProcessorEditor* DistortionAudioProcessor::createEditor()
 {
-    return new DistortionPluginAudioProcessorEditor (*this);
+    return new DistortionAudioProcessorEditor (*this);
 }
 
 //==============================================================================
-void DistortionPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void DistortionAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void DistortionPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void DistortionAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
@@ -238,25 +216,5 @@ void DistortionPluginAudioProcessor::setStateInformation (const void* data, int 
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new DistortionPluginAudioProcessor();
+    return new DistortionAudioProcessor();
 }
-
-juce::AudioProcessorValueTreeState::ParameterLayout DistortionPluginAudioProcessor::createParameters()
-{
-    std::vector<std::unique_ptr<juce::RangedAudioParameter>> parameters;
-     
-    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("GAIN", "Input Gain", 1, 40, 10));
-    
-    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("VOLUME", "Output level", 1, 100, 20));
-
-    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("TONE", "Tone", 220, 880, 440));
-
-    // we return                         
-    return { parameters.begin(), parameters.end() };
-}
-
-
-void DistortionPluginAudioProcessor::setTypeSelected(int type){
-    distortionType = type;
-}
-
