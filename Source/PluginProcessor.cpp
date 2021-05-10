@@ -22,7 +22,7 @@ DistortionAudioProcessor::DistortionAudioProcessor()
                        )
 #endif
 {
-    oversampling.reset (new dsp::Oversampling<float> (2, 2, dsp::Oversampling<float>::filterHalfBandFIREquiripple, false));
+    oversampling.reset (new juce::dsp::Oversampling<float> (2, 2, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, false));
 }
 
 DistortionAudioProcessor::~DistortionAudioProcessor()
@@ -160,9 +160,9 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     float* channelOutDataR = buffer.getWritePointer(1);
     const float* channelInData = buffer.getReadPointer(0);
     
-    dsp::AudioBlock<float> block(buffer);
+    juce::dsp::AudioBlock<float> block(buffer);
     
-    dsp::AudioBlock<float> blockOversampled = oversampling->processSamplesUp(block); 
+    juce::dsp::AudioBlock<float> blockOversampled = oversampling->processSamplesUp(block); 
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
@@ -210,7 +210,7 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
               //channelOutDataR[i] = 2.0f* in;
         }
         
-        oversampling->processSamplesDown(block); 
+        oversampling->processSamplesDown(blockOversampled); 
     }
         
     }
