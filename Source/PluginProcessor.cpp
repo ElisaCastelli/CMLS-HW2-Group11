@@ -304,9 +304,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout DistortionAudioProcessor::cr
     
     parameters.push_back (std::make_unique<juce::AudioParameterFloat> ("volume", "Output level", -20.0f, 20.0f, 0.0f));
 
-    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("toneCutoff", "Tone Cutoff", 20.0f, 20000.0f, 4000.0f));
+    parameters.push_back (std::make_unique<juce::AudioParameterFloat> ("toneCutoff", "Tone Cutoff", 20.0f, 20000.0f, 4000.0f));
     
-    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("toneResonance", "Tone Resonance", 0.1f, 1.0f, 0.5f)); 
+    parameters.push_back (std::make_unique<juce::AudioParameterFloat> ("toneResonance", "Tone Resonance", 0.1f, 1.0f, 0.5f)); 
     
     parameters.push_back (std::make_unique<juce::AudioParameterInt> ("distortionType", "Distortion Type", 1, 5, 1));
 

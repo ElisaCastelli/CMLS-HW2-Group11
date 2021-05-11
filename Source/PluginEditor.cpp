@@ -86,20 +86,20 @@ void DistortionAudioProcessorEditor::resized()
     const int borderX = 20;
     const int borderY = 50;
     
-    const int sliderWidth = getWidth()/3 - 2*borderX;
+    const int sliderWidth = getWidth()/4 - 2*borderX;
     const int sliderHeight = getHeight() - borderX -100;
     
     gainSlider.setBounds(borderX, borderY, sliderWidth, sliderHeight);
     gainLabel.setBounds(borderX, borderY + 10, 100, 20);
     
-    toneCutoffSlider.setBounds(getWidth()/3+ borderX, borderY, sliderWidth, sliderHeight);
-    toneCutoffLabel.setBounds(getWidth()/3+ borderX, borderY + 10, 100, 20);
+    toneCutoffSlider.setBounds(getWidth()/4+ borderX, borderY, sliderWidth, sliderHeight);
+    toneCutoffLabel.setBounds(getWidth()/4+ borderX, borderY + 10, 100, 20);
     
-    toneResonanceSlider.setBounds(getWidth()/3+ borderX, borderY + 100, sliderWidth, sliderHeight);
-    toneResonanceLabel.setBounds(getWidth()/3+ borderX, borderY + 110, 100, 20);
+    toneResonanceSlider.setBounds(getWidth()/2+ borderX, borderY , sliderWidth, sliderHeight);
+    toneResonanceLabel.setBounds(getWidth()/2+ borderX, borderY +10, 100, 20);
     
-    volumeSlider.setBounds(2*getWidth()/3 + borderX, borderY,  sliderWidth, sliderHeight);
-    volumeLabel.setBounds(2*getWidth()/3 + borderX, borderY + 10, 100, 20);
+    volumeSlider.setBounds(3*getWidth()/4 + borderX, borderY,  sliderWidth, sliderHeight);
+    volumeLabel.setBounds(3*getWidth()/4 + borderX, borderY + 10, 100, 20);
     
     distortionTypeMenu.setBounds(100, 10, 200, 20);
 }
