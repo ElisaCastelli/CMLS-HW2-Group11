@@ -58,5 +58,9 @@ private:
     
     std::unique_ptr<juce::dsp::Oversampling<float>> oversampling;
     
+    juce::dsp::ProcessorDuplicator <juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients <float>> lowPassFilter;
+    
+    float lastSampleRate;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DistortionAudioProcessor)
 };

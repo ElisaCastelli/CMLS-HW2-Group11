@@ -19,7 +19,7 @@ DistortionAudioProcessor::DistortionAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),lowPassFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1))
 #endif
 {
     oversampling.reset (new juce::dsp::Oversampling<float> (2, 1, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, false));
@@ -98,6 +98,16 @@ void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     // initialisation that you need..
     oversampling->reset();
     oversampling->initProcessing (static_cast<size_t> (samplesPerBlock));
+    
+    lastSampleRate = sampleRate;
+    
+    juce::dsp::ProcessSpec spec;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.sampleRate = sampleRate;
+    spec.numChannels = getTotalNumOutputChannels();
+
+    lowPassFilter.prepare(spec);
+    lowPassFilter.reset();
     
 }
 
@@ -219,6 +229,10 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     }
     
     oversampling->processSamplesDown(block); 
+    
+     *lowPassFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, 440);
+    
+    lowPassFilter.process(juce::dsp::ProcessContextReplacing<float> (block));
     
      
 }
