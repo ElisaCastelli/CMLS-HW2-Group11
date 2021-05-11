@@ -61,9 +61,13 @@ private:
     
     std::unique_ptr<juce::dsp::Oversampling<float>> oversampling;
     
-    juce::dsp::ProcessorDuplicator <juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients <float>> lowPassFilter;
+    juce::dsp::ProcessorDuplicator <juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients <float>> antiAliasingFilter;
+    
+    juce::dsp::ProcessorDuplicator <juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients <float>> toneFilter;
     
     float lastSampleRate;
+    
+    int oversamplingFactor = 4;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DistortionAudioProcessor)
 };

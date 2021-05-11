@@ -15,7 +15,7 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor (DistortionAudioP
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (400, 300);
+    setSize (400, 500);
     
     //GAIN
     gainSlider.setSliderStyle (juce::Slider::Rotary);
@@ -32,11 +32,19 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor (DistortionAudioP
     addAndMakeVisible (volumeLabel);
     
     //TONE
-    toneSlider.setSliderStyle (juce::Slider::Rotary);
-    toneSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 100, 20);
-    toneLabel.setText("Cutoff", juce::dontSendNotification);
-    addAndMakeVisible (toneSlider);
-    addAndMakeVisible (toneLabel);
+    toneCutoffSlider.setSliderStyle (juce::Slider::Rotary);
+    toneCutoffSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 100, 20);
+    toneCutoffLabel.setText("Tone cutoff", juce::dontSendNotification);
+    addAndMakeVisible (toneCutoffSlider);
+    addAndMakeVisible (toneCutoffLabel);
+    
+    toneResonanceSlider.setSliderStyle (juce::Slider::Rotary);
+    toneResonanceSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 100, 20);
+    toneResonanceLabel.setText("Tone resonance", juce::dontSendNotification);
+    addAndMakeVisible (toneResonanceSlider);
+    addAndMakeVisible (toneResonanceLabel);
+    
+    
     
     //MENU TO CHOOSE DISTORTION TYPE
     
@@ -51,7 +59,8 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor (DistortionAudioP
     //attachments to ValueTreeState
     gainSliderAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.valueTree, "gain", gainSlider);
     volumeSliderAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.valueTree, "volume", volumeSlider);
-    toneSliderAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.valueTree, "tone", toneSlider);
+    toneCutoffSliderAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.valueTree, "toneCutoff", toneCutoffSlider);
+    toneResonanceSliderAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.valueTree, "toneResonance", toneResonanceSlider);
     typeMenuAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(audioProcessor.valueTree, "distortionType", distortionTypeMenu);
 }
 
@@ -83,8 +92,11 @@ void DistortionAudioProcessorEditor::resized()
     gainSlider.setBounds(borderX, borderY, sliderWidth, sliderHeight);
     gainLabel.setBounds(borderX, borderY + 10, 100, 20);
     
-    toneSlider.setBounds(getWidth()/3+ borderX, borderY, sliderWidth, sliderHeight);
-    toneLabel.setBounds(getWidth()/3+ borderX, borderY + 10, 100, 20);
+    toneCutoffSlider.setBounds(getWidth()/3+ borderX, borderY, sliderWidth, sliderHeight);
+    toneCutoffLabel.setBounds(getWidth()/3+ borderX, borderY + 10, 100, 20);
+    
+    toneResonanceSlider.setBounds(getWidth()/3+ borderX, borderY + 100, sliderWidth, sliderHeight);
+    toneResonanceLabel.setBounds(getWidth()/3+ borderX, borderY + 110, 100, 20);
     
     volumeSlider.setBounds(2*getWidth()/3 + borderX, borderY,  sliderWidth, sliderHeight);
     volumeLabel.setBounds(2*getWidth()/3 + borderX, borderY + 10, 100, 20);

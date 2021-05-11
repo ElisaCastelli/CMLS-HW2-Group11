@@ -20,10 +20,11 @@ DistortionAudioProcessor::DistortionAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ), valueTree(*this, nullptr, "Parameters", createParameters()),
-                      lowPassFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1))
+                      antiAliasingFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1)),
+                      toneFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1))
 #endif
 {
-    oversampling.reset (new juce::dsp::Oversampling<float> (2, 2, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, false));
+    oversampling.reset (new juce::dsp::Oversampling<float> (2, log2(oversamplingFactor), juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, false));
 }
 
 DistortionAudioProcessor::~DistortionAudioProcessor()
@@ -104,12 +105,19 @@ void DistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     
     juce::dsp::ProcessSpec spec;
     spec.maximumBlockSize = samplesPerBlock;
-    spec.sampleRate = sampleRate;
+    spec.sampleRate = sampleRate*oversamplingFactor;
     spec.numChannels = getTotalNumOutputChannels();
 
-    lowPassFilter.prepare(spec);
-    lowPassFilter.reset();
+    antiAliasingFilter.prepare(spec);
+    antiAliasingFilter.reset();
     
+    juce::dsp::ProcessSpec specTone;
+    specTone.maximumBlockSize = samplesPerBlock;
+    specTone.sampleRate = sampleRate;
+    specTone.numChannels = getTotalNumOutputChannels();
+    
+    toneFilter.prepare(specTone);
+    toneFilter.reset();
 }
 
 void DistortionAudioProcessor::releaseResources()
@@ -168,7 +176,8 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     
     //int numSamples = buffer.getNumSamples();
     
-    float tone = *valueTree.getRawParameterValue("tone");
+    float toneCutoff = *valueTree.getRawParameterValue("toneCutoff");
+    float toneResonance = *valueTree.getRawParameterValue("toneResonance");
     float inputGain = *valueTree.getRawParameterValue("gain");
     float outputLevel = *valueTree.getRawParameterValue("volume");
     int distortionType = *valueTree.getRawParameterValue("distortionType");
@@ -203,7 +212,6 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
                 else{
                     out = in;
                 }
-            
             }
             else if(distortionType == 2){
                 float threshold1 = 1.0f/3.0f;
@@ -231,7 +239,10 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             }else if(distortionType == 4){
                     out = fabsf(in);
             }else if(distortionType == 5){
-                if(in > 0)                    out = in;                else                    out = 0;
+                if(in > 0)
+                    out = in;
+                else
+                    out = 0;
             }
             out *= volumeDB;
             blockOversampled.setSample(channel, i, out);
@@ -239,13 +250,17 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         }
         
     }
+     
+    *antiAliasingFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate*oversamplingFactor, lastSampleRate/2.0f);
+    
+    antiAliasingFilter.process(juce::dsp::ProcessContextReplacing<float> (blockOversampled));
     
     oversampling->processSamplesDown(block); 
     
-     *lowPassFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, tone);
+   
+    *toneFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, toneCutoff, toneResonance);
     
-    lowPassFilter.process(juce::dsp::ProcessContextReplacing<float> (block));
-    
+    toneFilter.process(juce::dsp::ProcessContextReplacing<float> (block));
      
 }
 
@@ -289,7 +304,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout DistortionAudioProcessor::cr
     
     parameters.push_back (std::make_unique<juce::AudioParameterFloat> ("volume", "Output level", -20.0f, 20.0f, 0.0f));
 
-    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("tone", "Tone", 220, 880, 440));
+    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("toneCutoff", "Tone Cutoff", 20.0f, 20000.0f, 4000.0f));
+    
+    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("toneResonance", "Tone Resonance", 0.1f, 1.0f, 0.5f)); 
     
     parameters.push_back (std::make_unique<juce::AudioParameterInt> ("distortionType", "Distortion Type", 1, 5, 1));
 

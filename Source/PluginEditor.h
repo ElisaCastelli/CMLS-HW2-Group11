@@ -35,15 +35,20 @@ private:
     juce::Slider volumeSlider;
     juce::Label volumeLabel;
     
-    juce::Slider toneSlider;
-    juce::Label toneLabel;
+    juce::Slider toneCutoffSlider;
+    juce::Label toneCutoffLabel;
+    
+    juce::Slider toneResonanceSlider;
+    juce::Label toneResonanceLabel;
+    
     
     juce::ComboBox distortionTypeMenu;
     
     
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainSliderAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> volumeSliderAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> toneSliderAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> toneCutoffSliderAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> toneResonanceSliderAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> typeMenuAttachment;
     
 
