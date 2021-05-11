@@ -19,10 +19,11 @@ DistortionAudioProcessor::DistortionAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ),lowPassFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1))
+                       ), valueTree(*this, nullptr, "Parameters", createParameters()),
+                      lowPassFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1))
 #endif
 {
-    oversampling.reset (new juce::dsp::Oversampling<float> (2, 1, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, false));
+    oversampling.reset (new juce::dsp::Oversampling<float> (2, 2, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, false));
 }
 
 DistortionAudioProcessor::~DistortionAudioProcessor()
@@ -164,11 +165,16 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    int numSamples = buffer.getNumSamples();
     
-    float* channelOutDataL = buffer.getWritePointer(0);
-    float* channelOutDataR = buffer.getWritePointer(1);
-    const float* channelInData = buffer.getReadPointer(0);
+    //int numSamples = buffer.getNumSamples();
+    
+    float tone = *valueTree.getRawParameterValue("tone");
+    float inputGain = *valueTree.getRawParameterValue("gain");
+    float outputLevel = *valueTree.getRawParameterValue("volume");
+    int distortionType = *valueTree.getRawParameterValue("distortionType");
+    
+    float gainDB = pow(10, inputGain / 20);
+    float volumeDB = pow(10, outputLevel / 20);
     
     juce::dsp::AudioBlock<float> block(buffer);
     
@@ -183,45 +189,51 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         
         for (int i = 0; i < blockOversampled.getNumSamples(); ++i) {
             float in = blockOversampled.getSample(channel, i);
-            float threshold = 1.0f;
-            float out;
-            in *= 10;
-            /*if(in > threshold){
-                channelOutDataL[i] = threshold;
-                channelOutDataR[i] = threshold;
-            }
-            else if(in < -threshold){
-                channelOutDataL[i] = -threshold;
-                channelOutDataR[i] = -threshold;
-            }
-           else{
-                channelOutDataL[i] = in;
-                channelOutDataR[i] = in;
-            }*/
-            float threshold1 = 1.0f/3.0f;
-            float threshold2 = 2.0f/3.0f;
-            if(in > threshold2){
-                //blockOversampled.setSample(channel, i, 0.935551f);
-                out = 1.0f;
-            }
-            else if(in > threshold1){
-                out = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;
-                //channelOutDataR[i] = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;
-            }
-            else if(in < -threshold2){
-                out = -1.0f;
-                //channelOutDataR[i] = -1.0f;
-            }
-            else if(in < -threshold1){
-                out = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;
-                //channelOutDataR[i] = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;
-            }
-            else{
-                out = 2.0f* in;
-                //channelOutDataR[i] = 2.0f* in;
-            }
             
-            //channelData[i] = out;
+            float out;
+            in *= gainDB;
+            if(distortionType == 1){
+                float threshold = 1.0f;
+                if(in > threshold){
+                    out = threshold;
+                }
+                else if(in < -threshold){
+                    out = -threshold;
+                }
+                else{
+                    out = in;
+                }
+            
+            }
+            else if(distortionType == 2){
+                float threshold1 = 1.0f/3.0f;
+                float threshold2 = 2.0f/3.0f;
+                if(in > threshold2){
+                    out = 1.0f;
+                }
+                else if(in > threshold1){
+                    out = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;
+                }
+                else if(in < -threshold2){
+                    out = -1.0f;
+                }
+                else if(in < -threshold1){
+                    out = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;
+                }
+                else{
+                    out = 2.0f* in;
+                }
+            }else if(distortionType == 3){
+                if(in > 0)
+                    out = 1.0f - expf(-in);
+                else
+                    out = -1.0f + expf(in);
+            }else if(distortionType == 4){
+                    out = fabsf(in);
+            }else if(distortionType == 5){
+                if(in > 0)                    out = in;                else                    out = 0;
+            }
+            out *= volumeDB;
             blockOversampled.setSample(channel, i, out);
             
         }
@@ -230,7 +242,7 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     
     oversampling->processSamplesDown(block); 
     
-     *lowPassFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, 440);
+     *lowPassFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, tone);
     
     lowPassFilter.process(juce::dsp::ProcessContextReplacing<float> (block));
     
@@ -267,4 +279,20 @@ void DistortionAudioProcessor::setStateInformation (const void* data, int sizeIn
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new DistortionAudioProcessor();
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout DistortionAudioProcessor::createParameters()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> parameters;
+     
+    parameters.push_back (std::make_unique<juce::AudioParameterFloat> ("gain", "Input Gain", 0.0f, 40.0f, 10.0f));
+    
+    parameters.push_back (std::make_unique<juce::AudioParameterFloat> ("volume", "Output level", -20.0f, 20.0f, 0.0f));
+
+    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("tone", "Tone", 220, 880, 440));
+    
+    parameters.push_back (std::make_unique<juce::AudioParameterInt> ("distortionType", "Distortion Type", 1, 5, 1));
+
+    // we return                         
+    return { parameters.begin(), parameters.end() };
 }

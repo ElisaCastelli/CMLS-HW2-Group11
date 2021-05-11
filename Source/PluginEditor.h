@@ -29,7 +29,22 @@ private:
     // access the processor object that created it.
     DistortionAudioProcessor& audioProcessor;
     
+    juce::Slider gainSlider;
+    juce::Label gainLabel;
     
+    juce::Slider volumeSlider;
+    juce::Label volumeLabel;
+    
+    juce::Slider toneSlider;
+    juce::Label toneLabel;
+    
+    juce::ComboBox distortionTypeMenu;
+    
+    
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gainSliderAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> volumeSliderAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> toneSliderAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> typeMenuAttachment;
     
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DistortionAudioProcessorEditor)
