@@ -22,7 +22,7 @@ DistortionAudioProcessor::DistortionAudioProcessor()
                        )
 #endif
 {
-    oversampling.reset (new juce::dsp::Oversampling<float> (2, 2, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, false));
+    oversampling.reset (new juce::dsp::Oversampling<float> (2, 1, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, false));
 }
 
 DistortionAudioProcessor::~DistortionAudioProcessor()
@@ -164,57 +164,61 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     
     juce::dsp::AudioBlock<float> blockOversampled = oversampling->processSamplesUp(block); 
     
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    for (int channel = 0; channel < blockOversampled.getNumChannels(); ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
         
        
         // ..do something to the data...
         
-    for (int i = 0; i < (int)blockOversampled.getNumSamples(); ++i) {
-        float in = blockOversampled.getSample(channel, i);
-        float threshold = 1.0f;
-        in *= 10;
-        /*if(in > threshold){
-              channelOutDataL[i] = threshold;
-              channelOutDataR[i] = threshold;
+        for (int i = 0; i < blockOversampled.getNumSamples(); ++i) {
+            float in = blockOversampled.getSample(channel, i);
+            float threshold = 1.0f;
+            float out;
+            in *= 10;
+            /*if(in > threshold){
+                channelOutDataL[i] = threshold;
+                channelOutDataR[i] = threshold;
+            }
+            else if(in < -threshold){
+                channelOutDataL[i] = -threshold;
+                channelOutDataR[i] = -threshold;
+            }
+           else{
+                channelOutDataL[i] = in;
+                channelOutDataR[i] = in;
+            }*/
+            float threshold1 = 1.0f/3.0f;
+            float threshold2 = 2.0f/3.0f;
+            if(in > threshold2){
+                //blockOversampled.setSample(channel, i, 0.935551f);
+                out = 1.0f;
+            }
+            else if(in > threshold1){
+                out = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;
+                //channelOutDataR[i] = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;
+            }
+            else if(in < -threshold2){
+                out = -1.0f;
+                //channelOutDataR[i] = -1.0f;
+            }
+            else if(in < -threshold1){
+                out = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;
+                //channelOutDataR[i] = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;
+            }
+            else{
+                out = 2.0f* in;
+                //channelOutDataR[i] = 2.0f* in;
+            }
+            
+            //channelData[i] = out;
+            blockOversampled.setSample(channel, i, out);
+            
         }
-        else if(in < -threshold){
-              channelOutDataL[i] = -threshold;
-              channelOutDataR[i] = -threshold;
-        }
-        else{
-              channelOutDataL[i] = in;
-              channelOutDataR[i] = in;
-        }*/
-        float threshold1 = 1.0f/3.0f;
-        float threshold2 = 2.0f/3.0f;
-        if(in > threshold2){
-              channelData[i] = 1.0f;
-              //channelOutDataR[i] = 1.0f;
-        }
-        else if(in > threshold1){
-              channelData[i] = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;
-              //channelOutDataR[i] = (3.0f - (2.0f - 3.0f*in) * (2.0f - 3.0f*in))/3.0f;
-        }
-        else if(in < -threshold2){
-              channelData[i] = -1.0f;
-              //channelOutDataR[i] = -1.0f;
-        }
-        else if(in < -threshold1){
-              channelData[i] = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;
-              //channelOutDataR[i] = -(3.0f - (2.0f + 3.0f*in) * (2.0f + 3.0f*in))/3.0f;
-        }
-        else{
-              channelData[i] = 2.0f* in;
-              //channelOutDataR[i] = 2.0f* in;
-        }
-        
-        oversampling->processSamplesDown(blockOversampled); 
-    }
         
     }
     
+    oversampling->processSamplesDown(block); 
     
      
 }
