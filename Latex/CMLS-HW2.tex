@@ -87,7 +87,26 @@
 	\\
 	
 	\textbf{-	Audio Processor }\\
+
+        The processor contains the implementation of the distortion effect as well as the logic behind the different knobs.
+        In its header file we defined some useful variables such as:
+        
+        \\
+	-	oversampling: an object of class juce::dsp::Oversampling
 	
+	-	antiAliasingFilter: an IIR filter used in order to avoid aliasing after the oversampling
+	
+	-	toneFilter: an IIR tone-shaper filter
+	
+	-	lastSampleRate: sample rate of the input signal
+
+	-	oversamplingFactor: the factor defining the oversampling step
+        \\
+
+        In the cpp file, specifically in the method processBlock, we used the method processSamplesUp in order to perform the oversampling of the input signal.
+        Then we implemented the logic for the different distortion effects simply by applying 5 different non-linear functions to the oversampled signal.
+        After that we took the distorted signal and filtered it with an anti-aliasing low-pass filter with cut-off frequency equal to the original sampling rate divided by 2.
+        Finally we downsampled the signal down to the original sampling rate and applied anotherlow-pass filter with the purpose of shaping the sound of the distorted signal.  
 	
 	\begin{thebibliography}{99}
 		
