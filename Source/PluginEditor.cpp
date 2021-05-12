@@ -15,7 +15,7 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor (DistortionAudioP
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (400, 500);
+    setSize (600, 300);
     
     //GAIN
     gainSlider.setSliderStyle (juce::Slider::Rotary);
@@ -101,5 +101,5 @@ void DistortionAudioProcessorEditor::resized()
     volumeSlider.setBounds(3*getWidth()/4 + borderX, borderY,  sliderWidth, sliderHeight);
     volumeLabel.setBounds(3*getWidth()/4 + borderX, borderY + 10, 100, 20);
     
-    distortionTypeMenu.setBounds(100, 10, 200, 20);
+    distortionTypeMenu.setBounds(200, 10, 200, 20);
 }

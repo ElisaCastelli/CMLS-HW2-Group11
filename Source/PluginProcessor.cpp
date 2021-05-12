@@ -246,7 +246,6 @@ void DistortionAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             }
             out *= volumeDB;
             blockOversampled.setSample(channel, i, out);
-            
         }
         
     }
