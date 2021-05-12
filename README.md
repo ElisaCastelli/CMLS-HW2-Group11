@@ -1,6 +1,6 @@
 # CMLS - HW2 - DISTORTION EFFECT PLUGIN
 
-The aim of our project was to develop a distortion plugin using the JUCE framework \cite{juce}.
+The aim of our project was to develop a distortion plugin using the JUCE framework.
 Distortion is a non-linear effect used to alter the harmonic content of a sound or an instrument, usually by increasing their gain, producing a "dirty" tone.
 	
 Distortion effects can create a wide palette of sounds ranging from smooth, singing tones with long sustain to harsh, grungy effects.
