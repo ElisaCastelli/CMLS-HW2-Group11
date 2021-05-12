@@ -67,7 +67,7 @@
 		\end{cases}       
 	\end{equation}
 	
-	where $G$ is the input gain that can be modified by the user.s
+	where $G$ is the input gain that can be modified by the users.
 	
 	\subsection*{Soft clipping}
 	
@@ -97,7 +97,7 @@
 	
 	The two previous situations are also referred as \textit{overdrive} since there are both regions of linearity and non-linearity.
 	
-	Overdrive is more peasant to the listener and it resemble the soft limiting of valves.
+	Overdrive is more pleasant to the listener and it resembles the soft limiting of valves.
 	
 	
 	\subsection*{Rectifiers}
@@ -123,7 +123,7 @@
 	
 	Due to the sampling theorem, any frequency exceeding the Nyquist frequency (i.e. half of the sampling rate) will cause \textit{aliasing}. In aliasing all content exceeding the Nyquist frequency folds back towards lower frequencies \cite{oversampling}.
 	
-	To avoid aliasing we put a low pass filter (with cut-off frequency at half of the \textsl{original}sampling rate) just before the down-sampling phase. This is also called \textbf{anti-aliasing filter}.
+	To avoid aliasing we put a low pass filter (with cut-off frequency at half of the \textsl{original} sampling rate) just before the down-sampling phase. This is also called \textbf{anti-aliasing filter}.
 
 	
 	\section{GUI}
@@ -157,12 +157,12 @@
 	
 	The volume knob allows the user to change the output amplitude of the sound.
 	
-	The dropdown menu is used to change the type of distortion effect applied to the sound. We have implemented five types of distortion: hard clipping, soft clipping exponential, soft clipping quadratic, soft clipping exponential, full wave rectification and half wave rectification.
+	The dropdown menu is used to change the type of distortion effect applied to the sound. We have implemented five types of distortion: hard clipping, soft clipping exponential, soft clipping quadratic, full wave rectification and half wave rectification.
 	
 	\section{Implementation}
 	
 	Our distortion plugin has been developed in C++, as programming language, using the JUCE cross-platform framework. We have followed a standard JUCE audio plugin development, implementing the two main classes Audio Processor and Audio Processor Editor. 
-	Using this standard structure, we were been able to divide the more graphical part, implemented in the Audio Processor Editor class, from the one dedicated to audio processing, developed in the Audio Processor class.
+	Using this standard structure, we have been able to divide the more graphical part, implemented in the Audio Processor Editor class, from the one dedicated to audio processing, developed in the Audio Processor class.
 	\\
 	
 	\textbf{-	Audio Processor Editor} 
@@ -171,7 +171,7 @@
 	In this class we have designed the Graphic User Interface by adding to the plugin window the graphic components we have needed: rotary sliders, in order to design the gain, tone and volume knobs, and a combo box menu, in Figure[\ref{fig:combobox}], in order to design the dropdown menu with which the user can choose the type of distortion effect to introduce.
 	
 	After having defined them, we have given to each element a fixed position and a size using the setBounds method.
-	We haven’t redraw the style of the graphical elements with the LookAndFeel class but we have used the standard components.
+	We haven’t redrawn the style of the graphical elements with the LookAndFeel class but we have used the standard components.
 	\\
 	
 	\begin{figure}[h!]
