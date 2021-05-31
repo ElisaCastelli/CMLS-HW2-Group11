@@ -7,6 +7,8 @@ Distortion effects can create a wide palette of sounds ranging from smooth, sing
 	
 In our plugin we decided to implement five kinds of distortion: Hard Clipping, Quadratic Soft Clipping, Exponential Soft Clipping, Full Wave Rectifier, Half Wave Rectifier. Each one has a different characteristic curve therefore a different sound timbre.
 
+[Demo](https://www.youtube.com/watch?v=nQth8Msc8OU)
+
 
 
 ## Group components:
